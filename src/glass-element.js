@@ -1,10 +1,4 @@
 import { getDisplacementMap, getDisplacementFilter } from './utils.js';
-
-/**
- * Web Component GlassElement
- * Liquid glass effect using SVG filters.
- * Works best in Chromium-based browsers, with automatic fallback for others.
- */
 export class GlassElement extends HTMLElement {
     constructor() {
         super();
