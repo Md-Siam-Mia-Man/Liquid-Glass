@@ -1,0 +1,34 @@
+{
+  "name": "@real-human/liquid-glass",
+  "version": "1.0.0",
+  "description": "A lightweight, vanilla JavaScript Web Component for liquid glass distortion effects.",
+  "type": "module",
+  "main": "./dist/liquid-glass.umd.js",
+  "module": "./dist/liquid-glass.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/liquid-glass.es.js",
+      "require": "./dist/liquid-glass.umd.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "web-component",
+    "glassmorphism",
+    "distortion",
+    "svg-filter",
+    "vanilla-js"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^7.2.4"
+  }
+}
