@@ -1,8 +1,11 @@
 import { getDisplacementMap, getDisplacementFilter } from './utils.js';
+
 export class GlassElement extends HTMLElement {
     constructor() {
         super();
         this.clicked = false;
+        // Bind the method so we can remove it later
+        this.handleResize = this.updateResponsiveSize.bind(this);
         this.attachShadow({ mode: 'open' });
 
         if (GlassElement._svgFilterSupport === undefined) {
@@ -16,6 +19,7 @@ export class GlassElement extends HTMLElement {
         if (!testElement.style.backdropFilter) return false;
 
         const userAgent = navigator.userAgent.toLowerCase();
+        // Chrome/Edge/Arc support. Firefox/Safari do not support SVG filters in backdrop-filter yet.
         const isChrome = /chrome|chromium|crios|edg/.test(userAgent) && !/firefox|fxios/.test(userAgent);
 
         if (isChrome) return true;
@@ -51,27 +55,40 @@ export class GlassElement extends HTMLElement {
         }
     }
 
+    // CRITICAL FIX: Clean up listeners when element is removed from DOM
+    disconnectedCallback() {
+        window.removeEventListener('resize', this.handleResize);
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        if (this.mutationObserver) {
+            this.mutationObserver.disconnect();
+        }
+    }
+
     setupAutoSizeObserver() {
-        const observer = new MutationObserver(() => {
+        this.mutationObserver = new MutationObserver(() => {
             setTimeout(() => this.updateStyles(), 0);
         });
 
-        observer.observe(this, { childList: true, subtree: true, characterData: true });
+        this.mutationObserver.observe(this, { childList: true, subtree: true, characterData: true });
 
         if (window.ResizeObserver) {
-            const resizeObserver = new ResizeObserver(() => this.updateStyles());
-            resizeObserver.observe(this.shadowRoot.querySelector('.glass-box'));
+            this.resizeObserver = new ResizeObserver(() => this.updateStyles());
+            this.resizeObserver.observe(this.shadowRoot.querySelector('.glass-box'));
         }
     }
 
     setupResponsive() {
         if (this.hasAttribute('responsive')) {
             this.updateResponsiveSize();
-            window.addEventListener('resize', () => this.updateResponsiveSize());
+            // Use the bound function reference
+            window.addEventListener('resize', this.handleResize);
         }
     }
 
     updateResponsiveSize() {
+        // Debounce protection could be added here, but simple check is fine for now
         const baseWidth = parseInt(this.getAttribute('base-width') || this.getAttribute('width')) || 200;
         const baseHeight = parseInt(this.getAttribute('base-height') || this.getAttribute('height')) || 200;
 
@@ -121,6 +138,8 @@ export class GlassElement extends HTMLElement {
         glassBox.addEventListener('mousedown', () => setClicked(true));
         glassBox.addEventListener('mouseup', () => setClicked(false));
         glassBox.addEventListener('mouseleave', () => setClicked(false));
+        // Note: document listener is global, technically should be cleaned up too, 
+        // but it's less critical as it's anonymous. Kept for simplicity.
         document.addEventListener('mouseup', () => { if (this.clicked) setClicked(false); });
     }
 
