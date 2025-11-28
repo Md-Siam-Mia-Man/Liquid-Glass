@@ -31,7 +31,7 @@ You don't need `npm` or terminal commands. Just add the script tag.
         }
 
         h1 { margin: 0; color: #fff; font-size: 2rem; }
-        p { color: rgba(255,255,255,0.8); }
+        p { color: rgba(255,255,255,0.9); }
     </style>
 </head>
 <body>
@@ -42,11 +42,11 @@ You don't need `npm` or terminal commands. Just add the script tag.
     <!-- The Component -->
     <glass-element 
         auto-size
-        blur="4"
-        depth="10"
-        strength="50"
+        blur="5"
+        strength="40"
         radius="20"
-        chromatic-aberration="3"
+        saturate="1.3"
+        background-color="rgba(255,255,255,0.1)"
     >
         <div style="padding: 2rem; text-align: center;">
             <h1>Liquid Glass</h1>
@@ -84,7 +84,7 @@ import '@real-human/liquid-glass';
 **Step 3: Usage (HTML/JSX)**
 
 ```html
-<glass-element auto-size strength="30">
+<glass-element auto-size strength="30" blur="5">
     <button>Click Me</button>
 </glass-element>
 ```
@@ -104,10 +104,11 @@ import '@real-human/liquid-glass'; // Make sure it's imported once
 const card = document.createElement('glass-element');
 
 // 2. Configure attributes
-card.setAttribute('auto-size', ''); // Boolean attribute
+card.setAttribute('auto-size', ''); 
 card.setAttribute('depth', '15');
-card.setAttribute('blur', '5');
-card.setAttribute('background-color', 'rgba(255, 0, 0, 0.2)'); // Red tint
+card.setAttribute('blur', '3');
+card.setAttribute('saturate', '1.5'); // Boost colors
+card.setAttribute('background-color', 'rgba(255, 255, 255, 0.05)'); // Very transparent
 
 // 3. Add Content
 const title = document.createElement('h2');
@@ -129,11 +130,11 @@ Here are the attributes you can tweak directly in HTML.
 | Attribute | Recommended Value | Effect |
 | :--- | :--- | :--- |
 | `auto-size` | (Just add it) | **Critical.** Makes the glass fit your content. |
-| `depth` | `5` to `20` | How "thick" the edges look. Higher = thicker. |
-| `blur` | `0` to `10` | Blurs the background image behind the glass. |
-| `strength` | `20` to `100` | How much the light bends/distorts. |
+| `blur` | `2` to `10` | Low values (2-5) show sharp liquid ripples. High values (10+) look frosty. |
+| `background-color` | `rgba(255,255,255,0.05)` | Keep alpha low (0.05 - 0.2) to see the distortion clearly. |
+| `strength` | `20` to `60` | How much the light bends/distorts. |
+| `saturate` | `1.2` to `1.5` | Makes background colors behind the glass look more vibrant. |
 | `chromatic-aberration` | `0` to `5` | Splits colors (RGB) like a prism. Cool effect. |
-| `radius` | `10` to `50` | Rounded corners in pixels. |
 
 ---
 
