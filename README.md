@@ -14,16 +14,18 @@ Bring your UI to life with real-time SVG displacement filters. This component si
 
 - 💧 **Real-time Liquid Distortion** – Uses advanced SVG filters to bend light.
 - 🌈 **Chromatic Aberration** – Prism-like color splitting effect.
+- 🎨 **Color Vibrancy** – Control brightness and saturation to make backgrounds pop.
 - 🖱️ **Interactive** – Reacts to clicks and presses naturally.
 - 📱 **Responsive & Auto-sizing** – Fits your content perfectly.
 - 📦 **Zero Dependencies** – Pure Vanilla JS. < 5kb gzipped.
-- 🛡️ **Graceful Degradation** – Falls back to standard blur on unsupported browsers (Firefox/Safari).
+- 🛡️ **Graceful Degradation** – Falls back to standard blur on unsupported browsers.
 
 ---
 
 ## 🚀 Installation
 
 ### Option A: NPM (Recommended)
+
 Best for modern build setups (Vite, Webpack, Next.js, etc.)
 
 ```bash
@@ -59,11 +61,10 @@ Use the tag directly. The `auto-size` attribute is the magic wand that makes it 
 ```html
 <glass-element
     auto-size
-    depth="10"
-    blur="2"
-    strength="50"
+    blur="5"
+    strength="30"
     radius="25"
-    chromatic-aberration="3"
+    saturate="1.2"
 >
     <!-- Put anything you want inside -->
     <div style="padding: 2rem; color: white;">
@@ -77,20 +78,69 @@ Use the tag directly. The `auto-size` attribute is the magic wand that makes it 
 
 ## 🎛️ Configuration
 
-You can customize the physics of the glass using these attributes:
+You can customize the physics and color of the glass using these attributes:
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `auto-size` | `boolean` | `false` | **Highly Recommended.** Adapts the glass size to its content. |
-| `strength` | `number` | `100` | The intensity of the liquid distortion. |
-| `radius` | `number` | `50` | Border radius in pixels. |
+| `auto-size` | `boolean` | `false` | **Recommended.** Adapts the glass size to its content. |
+| `strength` | `number` | `20` | The intensity of the liquid distortion. |
+| `radius` | `number` | `25` | Border radius in pixels. |
 | `depth` | `number` | `10` | The simulated thickness of the glass edges. |
+| `blur` | `number` | `5` | The background blur amount. Lower values = sharper ripples. |
+| `background-color` | `color` | `rgba(255,255,255,0.1)` | The tint of the glass surface. Keep alpha low for clear glass. |
+| `saturate` | `number` | `1.1` | Color saturation multiplier (1.0 is normal). |
+| `brightness` | `number` | `1.1` | Brightness multiplier (1.0 is normal). |
 | `chromatic-aberration` | `number` | `0` | Splits RGB channels (prism effect). Values 2-5 look best. |
-| `blur` | `number` | `2` | The background blur amount (backdrop-filter). |
-| `background-color` | `color` | `rgba(255,255,255,0.4)` | The tint of the glass surface. |
-| `width` | `number` | `200` | Fixed width (Ignored if `auto-size` is on). |
-| `height` | `number` | `200` | Fixed height (Ignored if `auto-size` is on). |
-| `debug` | `boolean` | `false` | Shows the raw displacement map for debugging gradients. |
+| `debug` | `boolean` | `false` | Shows the raw displacement map for debugging. |
+
+---
+
+## 🧪 Glass Recipes
+
+Different settings create vastly different materials.
+
+### 🧊 Crystal Clear Water
+
+Best for high-end UI where you want to see the background clearly with sharp liquid edges.
+
+```html
+<glass-element 
+    blur="2" 
+    background-color="rgba(255, 255, 255, 0.05)" 
+    strength="50"
+    saturate="1.2"
+>
+    <!-- Content -->
+</glass-element>
+```
+
+### 🌫️ Frosted Ice
+
+Best for readability when placing text over busy backgrounds.
+
+```html
+<glass-element 
+    blur="15" 
+    background-color="rgba(255, 255, 255, 0.4)" 
+    strength="20"
+>
+    <!-- Content -->
+</glass-element>
+```
+
+### 🌈 Prism Oil
+
+Heavy distortion with color splitting.
+
+```html
+<glass-element 
+    strength="80" 
+    chromatic-aberration="5" 
+    saturate="1.5"
+>
+    <!-- Content -->
+</glass-element>
+```
 
 ---
 
@@ -100,9 +150,8 @@ This component relies on **SVG Filters inside Backdrop Filter**, a cutting-edge 
 
 | Browser | Status | Experience |
 | :--- | :--- | :--- |
-| **Chrome / Edge / Arc** | ✅ Supported | Full liquid distortion & chromatic aberration. |
-| **Brave / Opera** | ✅ Supported | Full liquid distortion & chromatic aberration. |
-| **Firefox / Safari** | ⚠️ Fallback | Displays a standard "Frosted Glass" (blur) effect. |
+| **Chrome / Edge / Arc / Brave** | ✅ Supported | Full liquid distortion & chromatic aberration. |
+| **Firefox / Safari** | ⚠️ Fallback | Displays a clean, standard "Frosted Glass" effect (no liquid distortion). |
 
 > **Note:** The component detects browser support automatically. If liquid effects aren't supported, it gracefully degrades to a standard `backdrop-filter: blur()`, ensuring your UI never looks broken.
 
