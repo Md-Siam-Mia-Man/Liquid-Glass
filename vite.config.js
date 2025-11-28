@@ -9,7 +9,7 @@ export default defineConfig({
             fileName: (format) => `liquid-glass.${format}.js`,
         },
         rollupOptions: {
-            // Ensure external dependencies are not bundled (none in this case)
+            // Ensure external dependencies are not bundled
             external: [],
             output: {
                 globals: {},
