@@ -4,48 +4,55 @@
 
 /**
  * Creates the displacement map used by the feDisplacementMap filter.
- * Gradients take the element's radius into account.
+ * This creates the visual "3D edge" logic.
  */
 export function getDisplacementMap({ height, width, radius, depth }) {
     const svg = `<svg height="${height}" width="${width}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-        <style>
-            .mix { mix-blend-mode: screen; }
-        </style>
         <defs>
-            <linearGradient 
-              id="Y" 
-              x1="0" 
-              x2="0" 
-              y1="${Math.ceil((radius / height) * 15)}%" 
-              y2="${Math.floor(100 - (radius / height) * 15)}%">
+            <!-- Vertical Gradient (Top/Bottom edges) -->
+            <linearGradient id="gY" x1="0" x2="0" y1="0" y2="100%">
                 <stop offset="0%" stop-color="#0F0" />
+                <stop offset="50%" stop-color="#808080" />
                 <stop offset="100%" stop-color="#000" />
             </linearGradient>
-            <linearGradient 
-              id="X" 
-              x1="${Math.ceil((radius / width) * 15)}%" 
-              x2="${Math.floor(100 - (radius / width) * 15)}%"
-              y1="0" 
-              y2="0">
+            <!-- Horizontal Gradient (Left/Right edges) -->
+            <linearGradient id="gX" x1="0" x2="100%" y1="0" y2="0">
                 <stop offset="0%" stop-color="#F00" />
+                <stop offset="50%" stop-color="#808080" />
                 <stop offset="100%" stop-color="#000" />
             </linearGradient>
         </defs>
 
+        <!-- Neutral gray base (no displacement) -->
         <rect x="0" y="0" height="${height}" width="${width}" fill="#808080" />
-        <g filter="blur(2px)">
-          <rect x="0" y="0" height="${height}" width="${width}" fill="#000080" />
-          <rect x="0" y="0" height="${height}" width="${width}" fill="url(#Y)" class="mix" />
-          <rect x="0" y="0" height="${height}" width="${width}" fill="url(#X)" class="mix" />
+        
+        <g>
+          <!-- Inner content area (flat) -->
           <rect
               x="${depth}"
               y="${depth}"
-              height="${height - 2 * depth}"
-              width="${width - 2 * depth}"
+              height="${Math.max(0, height - 2 * depth)}"
+              width="${Math.max(0, width - 2 * depth)}"
               fill="#808080"
               rx="${radius}"
               ry="${radius}"
-              filter="blur(${depth}px)"
+          />
+          
+          <!-- Apply gradients to edges using blend modes to mix X and Y directions -->
+           <rect x="0" y="0" height="${height}" width="${width}" fill="url(#gY)" style="mix-blend-mode: overlay" />
+           <rect x="0" y="0" height="${height}" width="${width}" fill="url(#gX)" style="mix-blend-mode: overlay" />
+           
+           <!-- Slight blur on the map itself softens the sharp vector lines into 'liquid' curves -->
+           <rect
+              x="${depth / 2}"
+              y="${depth / 2}"
+              height="${Math.max(0, height - depth)}"
+              width="${Math.max(0, width - depth)}"
+              fill="none"
+              stroke="#808080"
+              stroke-width="${depth}"
+              rx="${radius}"
+              filter="blur(${depth / 2}px)"
           />
         </g>
     </svg>`;
@@ -55,6 +62,7 @@ export function getDisplacementMap({ height, width, radius, depth }) {
 
 /**
  * Creates the displacement filter URL.
+ * Allows for Chromatic Aberration by splitting channels.
  */
 export function getDisplacementFilter({
     height,
@@ -66,37 +74,57 @@ export function getDisplacementFilter({
 }) {
     const displacementMapUrl = getDisplacementMap({ height, width, radius, depth });
 
+    // If chromatic aberration is requested, we run displacement twice with slight offsets
+    // If not, we run a cleaner single displacement.
+    let filterContent = '';
+
+    if (chromaticAberration > 0) {
+        filterContent = `
+            <!-- 1. Import the Map -->
+            <feImage x="0" y="0" height="${height}" width="${width}" href="${displacementMapUrl}" result="map" />
+            
+            <!-- 2. Distort Red Channel (Stronger) -->
+            <feDisplacementMap
+                in="SourceGraphic"
+                in2="map"
+                scale="${strength + chromaticAberration * 5}"
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="displacedRed"
+            />
+            <feColorMatrix in="displacedRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="redOnly" />
+            
+            <!-- 3. Distort Blue/Green Channels (Weaker) -->
+            <feDisplacementMap
+                in="SourceGraphic"
+                in2="map"
+                scale="${strength - chromaticAberration * 2}"
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="displacedBlue"
+            />
+            <feColorMatrix in="displacedBlue" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blueGreenOnly" />
+            
+            <!-- 4. Merge -->
+            <feBlend in="redOnly" in2="blueGreenOnly" mode="screen" />
+        `;
+    } else {
+        filterContent = `
+            <feImage x="0" y="0" height="${height}" width="${width}" href="${displacementMapUrl}" result="map" />
+            <feDisplacementMap
+                in="SourceGraphic"
+                in2="map"
+                scale="${strength}"
+                xChannelSelector="R"
+                yChannelSelector="G"
+            />
+        `;
+    }
+
     const svg = `<svg height="${height}" width="${width}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <filter id="displace" color-interpolation-filters="sRGB">
-                <feImage x="0" y="0" height="${height}" width="${width}" href="${displacementMapUrl}" result="displacementMap" />
-                <feDisplacementMap
-                    transform-origin="center"
-                    in="SourceGraphic"
-                    in2="displacementMap"
-                    scale="${strength + chromaticAberration * 2}"
-                    xChannelSelector="R"
-                    yChannelSelector="G"
-                />
-                <feColorMatrix type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="displacedR" />
-                <feDisplacementMap
-                    in="SourceGraphic"
-                    in2="displacementMap"
-                    scale="${strength + chromaticAberration}"
-                    xChannelSelector="R"
-                    yChannelSelector="G"
-                />
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="displacedG" />
-                <feDisplacementMap
-                        in="SourceGraphic"
-                        in2="displacementMap"
-                        scale="${strength}"
-                        xChannelSelector="R"
-                        yChannelSelector="G"
-                    />
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="displacedB" />
-                <feBlend in="displacedR" in2="displacedG" mode="screen"/>
-                <feBlend in2="displacedB" mode="screen"/>
+                ${filterContent}
             </filter>
         </defs>
     </svg>`;
